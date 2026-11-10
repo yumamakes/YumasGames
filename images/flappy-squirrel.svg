@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 832 520">
+<defs><linearGradient id="sky" x2="0" y2="1"><stop stop-color="#7ed8ff"/><stop offset="1" stop-color="#dff7c7"/></linearGradient></defs>
+<rect width="832" height="520" rx="24" fill="url(#sky)"/>
+<circle cx="720" cy="85" r="42" fill="#fff8dc" opacity=".85"/>
+<path d="M0 390 Q120 300 240 390 T480 390 T720 390 T960 390 V520 H0Z" fill="#72a94b"/>
+<g fill="#4f7a2e"><circle cx="85" cy="350" r="70"/><circle cx="155" cy="360" r="55"/><circle cx="755" cy="350" r="75"/></g>
+<g fill="#5d82a9" opacity=".9"><rect x="300" y="300" width="70" height="150"/><rect x="390" y="260" width="90" height="190"/><rect x="500" y="320" width="65" height="130"/></g>
+<g fill="#fff8df"><rect x="320" y="325" width="18" height="22"/><rect x="350" y="325" width="18" height="22"/><rect x="415" y="290" width="20" height="24"/><rect x="450" y="290" width="20" height="24"/></g>
+<g stroke="#6b3f24" stroke-width="12" stroke-linecap="round"><path d="M45 430V230"/><path d="M787 440V210"/></g>
+<g fill="#68a936"><circle cx="40" cy="220" r="55"/><circle cx="95" cy="205" r="62"/><circle cx="770" cy="205" r="65"/><circle cx="820" cy="220" r="55"/></g>
+<g transform="translate(170 170) rotate(-8)">
+<ellipse cx="110" cy="90" rx="100" ry="62" fill="#c87927" stroke="#57351f" stroke-width="8"/>
+<ellipse cx="175" cy="72" rx="52" ry="48" fill="#d98b36" stroke="#57351f" stroke-width="8"/>
+<path d="M55 85 Q0 20 18 -25 Q80 15 105 70" fill="#b96720" stroke="#57351f" stroke-width="8"/>
+<ellipse cx="120" cy="105" rx="75" ry="38" fill="#f4d3a0"/>
+<circle cx="190" cy="65" r="13" fill="#222"/><circle cx="188" cy="61" r="4" fill="#fff"/>
+<path d="M175 88 Q190 100 205 88" fill="none" stroke="#57351f" stroke-width="6" stroke-linecap="round"/>
+<path d="M55 65 Q10 55 -8 25" fill="none" stroke="#f4d3a0" stroke-width="18" stroke-linecap="round"/>
+</g>
+<g transform="translate(590 300)">
+<path d="M55 115 Q75 45 95 0 Q115 45 135 115" fill="#f3c72f" stroke="#57351f" stroke-width="7"/>
+<circle cx="115" cy="18" r="32" fill="#f3c72f" stroke="#57351f" stroke-width="7"/>
+<circle cx="128" cy="10" r="5" fill="#222"/>
+<path d="M100 45 L88 25 M122 45 L138 24" stroke="#57351f" stroke-width="7"/>
+</g>
+<g transform="translate(520 400)">
+<ellipse cx="90" cy="45" rx="70" ry="38" fill="#fff" stroke="#57351f" stroke-width="7"/>
+<path d="M125 25 Q150 0 155 -30" fill="none" stroke="#57351f" stroke-width="7"/>
+<path d="M155 -30 L170 -48 L180 -25" fill="#f3c72f" stroke="#57351f" stroke-width="6"/>
+<path d="M115 20 Q155 15 170 35" fill="none" stroke="#e99bd0" stroke-width="12"/>
+</g>
+<text x="416" y="70" text-anchor="middle" font-family="Arial Rounded MT Bold, Trebuchet MS, sans-serif" font-size="54" font-weight="900" fill="#fff7cf" stroke="#56351f" stroke-width="10" paint-order="stroke">FLAPPY SQUIRREL</text>
+</svg>
