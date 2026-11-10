@@ -2,8 +2,8 @@
 // A page that uses this needs: <ol id="hsList">, and inside its game-over overlay
 // <form id="hsForm"> with <div id="hsRow"> holding <input id="hsName"> + submit button, and <p id="hsMsg">.
 const HighScores = (() => {
-  const SUPABASE_URL = 'https://xadeqalzcsxhsltqkbvb.supabase.co';
-  const SUPABASE_KEY = 'sb_publishable_wBzsTD1-GHNPhgSmowcwZw_2jKEJ28p';
+  const SUPABASE_URL = 'https://deahghwgtyofxwnstyfj.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_FCHTV28JOB3kRryQLJ1SGg_zjsS1Zbm';
   const headers = {apikey: SUPABASE_KEY};
   let game, list = [], online = false, pending = 0;
   const $ = id => document.getElementById(id);
