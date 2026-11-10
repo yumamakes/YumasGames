@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Flappy Squirrel — Yuma's Games</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap">
+<style>
+:root{--sky:#bdeeff;--ink:#2d3a27;--green:#4f8a3b;--brown:#8b5a2b;--cream:#fff8df;--orange:#ff8c42}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:linear-gradient(#bdeeff,#effbd5);color:var(--ink);font-family:"Fredoka","Trebuchet MS",system-ui,sans-serif;display:grid;place-items:center;padding:18px}
+.wrap{width:min(920px,100%);text-align:center}
+h1{margin:0 0 4px;font-size:clamp(2rem,7vw,3.4rem)}h1 span{color:#e77824}
+.sub{margin:0 0 12px;opacity:.75}
+.gamebox{position:relative;margin:auto;width:min(860px,100%);border:5px solid #3d5b31;border-radius:22px;overflow:hidden;background:#9de3ff;box-shadow:0 8px 0 #7b9b64}
+canvas{display:block;width:100%;height:auto;aspect-ratio:16/9;touch-action:none}
+.hud{position:absolute;inset:12px 14px auto;display:flex;justify-content:space-between;align-items:center;pointer-events:none;font-weight:700;font-size:1.05rem;text-shadow:0 2px #fff}
+.badge{background:#fff8dfdd;border:2px solid #536b42;border-radius:12px;padding:5px 10px}
+.overlay{position:absolute;inset:0;display:grid;place-items:center;background:#25442d66;padding:18px}
+.panel{max-width:520px;background:#fff8df;border:4px solid #536b42;border-radius:22px;padding:22px;box-shadow:0 7px 0 #536b42}
+.panel h2{margin:0 0 8px;font-size:clamp(1.8rem,6vw,2.8rem)}.panel p{margin:7px 0 15px;line-height:1.4}
+button{border:0;border-radius:14px;background:#e77824;color:white;font:700 1.1rem inherit;padding:11px 22px;cursor:pointer;box-shadow:0 4px 0 #a94e12}
+button:active{transform:translateY(3px);box-shadow:0 1px 0 #a94e12}
+.back{display:inline-block;margin-top:18px;color:var(--ink);font-weight:700;text-decoration:none}
+@media(prefers-reduced-motion:reduce){canvas{animation:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Flappy <span>Squirrel</span> 🐿️</h1>
+<p class="sub">Flap through 3 wild levels without hitting the obstacles!</p>
+<div class="gamebox">
+<canvas id="game" width="960" height="540" aria-label="Flappy Squirrel game"></canvas>
+<div class="hud"><span class="badge" id="level">Level 1</span><span class="badge" id="score">0 / 6</span></div>
+<div class="overlay" id="overlay">
+<div class="panel"><h2 id="title">Flappy Squirrel</h2><p id="message">Tap, click, or press Space to make the flying squirrel flap. Clear all 3 levels!</p><button id="start">Start Game</button></div>
+</div>
+</div>
+<a class="back" href="index.html">← Back to Yuma's Games</a>
+</div>
+<script>
+const canvas=document.getElementById("game"),ctx=canvas.getContext("2d");
+const overlay=document.getElementById("overlay"),title=document.getElementById("title"),message=document.getElementById("message"),start=document.getElementById("start"),levelEl=document.getElementById("level"),scoreEl=document.getElementById("score");
+const W=canvas.width,H=canvas.height,ground=500;
+const levels=[
+ {name:"Forest Flight",type:"tree",speed:3.0,gap:185,need:6,bg:"#9de3ff"},
+ {name:"City Swoop",type:"building",speed:3.5,gap:175,need:7,bg:"#b9ddff"},
+ {name:"Wild Unicorn Run",type:"mix",speed:4.0,gap:165,need:8,bg:"#d6c7ff"}
+];
+let lv=0,score=0,playing=false,dead=false,obstacles=[],last=0,spawn=0;
+const squirrel={x:220,y:260,vy:0,r:22,rot:0};
+function resetLevel(){squirrel.y=260;squirrel.vy=0;obstacles=[];spawn=0;score=0;levelEl.textContent="Level "+(lv+1)+" — "+levels[lv].name;scoreEl.textContent="0 / "+levels[lv].need}
+function begin(){lv=0;playing=true;dead=false;overlay.hidden=true;resetLevel();last=performance.now();requestAnimationFrame(loop)}
+function flap(){if(!playing){return} if(dead){return} squirrel.vy=-7.4}
+function addObstacle(){
+ const L=levels[lv], gap=L.gap, top=75+Math.random()*(ground-125-gap), kind=L.type;
+ if(kind==="mix"){kind=["tree","building","giraffe","unicorn"][Math.floor(Math.random()*4)]}
+ obstacles.push({x:W+40,w:76,top,bottom:top+gap,kind,passed:false})
+}
+function hit(o){return squirrel.x+squirrel.r*.75>o.x&&squirrel.x-squirrel.r*.75<o.x+o.w&&(squirrel.y-squirrel.r*.8<o.top||squirrel.y+squirrel.r*.8>o.bottom)}
+function nextLevel(){
+ if(lv<levels.length-1){lv++;resetLevel();flash("Level "+(lv+1)+"!");}
+ else{playing=false;overlay.hidden=false;title.textContent="You did it! 🐿️🏆";message.textContent="All 3 levels cleared! The flying squirrel wins.";start.textContent="Play Again";draw()}
+}
+function gameOver(){dead=true;playing=false;overlay.hidden=false;title.textContent="Splat!";message.textContent="The squirrel hit an obstacle. Score: "+score+" / "+levels[lv].need;start.textContent="Try Again";draw()}
+function flash(t){title.textContent=t;message.textContent="Keep flapping!";overlay.hidden=false;setTimeout(()=>{if(playing)overlay.hidden=true},650)}
+function update(dt){
+ const L=levels[lv];squirrel.vy+=18*dt;squirrel.y+=squirrel.vy;squirrel.rot=Math.max(-.45,Math.min(1.1,squirrel.vy/10));
+ spawn-=dt;if(spawn<=0){addObstacle();spawn=.95+Math.random()*.45}
+ for(const o of obstacles){o.x-=L.speed*60*dt;if(!o.passed&&o.x+o.w<squirrel.x){o.passed=true;score++;scoreEl.textContent=score+" / "+L.need;if(score>=L.need){nextLevel();return}}if(hit(o)){gameOver();return}}
+ obstacles=obstacles.filter(o=>o.x>-120);
+ if(squirrel.y-squirrel.r<0||squirrel.y+squirrel.r>ground){gameOver()}
+}
+function cloud(x,y,s){ctx.fillStyle="#fff";ctx.beginPath();ctx.arc(x,y,28*s,0,7);ctx.arc(x+32*s,y-12*s,22*s,0,7);ctx.arc(x+55*s,y,26*s,0,7);ctx.fill()}
+function drawBackground(){
+ const L=levels[lv];ctx.fillStyle=L.bg;ctx.fillRect(0,0,W,H);
+ cloud(100,90,1);cloud(700,120,.75);cloud(450,55,.55);
+ if(lv===0){ctx.fillStyle="#7fba55";ctx.fillRect(0,ground,W,H-ground);for(let x=20;x<W;x+=95){ctx.fillStyle="#5c963e";ctx.beginPath();ctx.arc(x,ground-12,38,Math.PI,2*Math.PI);ctx.fill()}}
+ if(lv===1){ctx.fillStyle="#8ab3a1";ctx.fillRect(0,ground,W,H-ground);ctx.fillStyle="#d6e0e5";for(let x=0;x<W;x+=90){ctx.fillRect(x,ground-110-(x%3)*25,72,110+(x%3)*25);ctx.fillStyle="#f6d65a";for(let y=ground-90;y<ground-20;y+=28)ctx.fillRect(x+13,y,12,10);ctx.fillStyle="#d6e0e5"}}
+ if(lv===2){ctx.fillStyle="#8fcf66";ctx.fillRect(0,ground,W,H-ground);ctx.fillStyle="#e6b6ff";ctx.fillRect(0,ground-5,W,5)}
+}
+function drawObstacle(o){
+ const x=o.x,w=o.w;
+ if(o.kind==="tree"){ctx.fillStyle="#79502a";ctx.fillRect(x+25,0,26,o.top);ctx.fillStyle="#3f8b42";for(let y=28;y<o.top;y+=48){ctx.beginPath();ctx.arc(x+38,y,34,0,7);ctx.fill()}ctx.fillStyle="#79502a";ctx.fillRect(x+25,o.bottom,26,ground-o.bottom);ctx.fillStyle="#3f8b42";for(let y=o.bottom+25;y<ground;y+=48){ctx.beginPath();ctx.arc(x+38,y,34,0,7);ctx.fill()}}
+ if(o.kind==="building"){ctx.fillStyle="#69778a";ctx.fillRect(x,0,w,o.top);ctx.fillRect(x,o.bottom,w,ground-o.bottom);ctx.fillStyle="#ffe36e";for(let yy=22;yy<o.top-10;yy+=35)for(let xx=x+12;xx<x+w-10;xx+=25)ctx.fillRect(xx,yy,12,16);for(let yy=o.bottom+20;yy<ground-10;yy+=35)for(let xx=x+12;xx<x+w-10;xx+=25)ctx.fillRect(xx,yy,12,16)}
+ if(o.kind==="giraffe"){drawGiraffe(x+38,o.top-18,true);drawGiraffe(x+38,o.bottom+18,false)}
+ if(o.kind==="unicorn"){drawUnicorn(x+38,o.top-8,true);drawUnicorn(x+38,o.bottom+8,false)}
+}
+function drawGiraffe(x,y,up){ctx.save();ctx.translate(x,y);if(up)ctx.scale(1,-1);ctx.fillStyle="#e6b64d";ctx.fillRect(-10,-58,20,58);ctx.fillRect(-24,-72,34,20);ctx.fillStyle="#8d632c";for(let i=0;i<5;i++){ctx.beginPath();ctx.arc(-12+(i%2)*18,-18-i*9,5,0,7);ctx.fill()}ctx.fillStyle="#e6b64d";ctx.fillRect(-16,-82,7,14);ctx.fillRect(10,-82,7,14);ctx.restore()}
+function drawUnicorn(x,y,up){ctx.save();ctx.translate(x,y);if(up)ctx.scale(1,-1);ctx.fillStyle="#fff";ctx.beginPath();ctx.ellipse(0,-32,30,20,0,0,7);ctx.fill();ctx.fillStyle="#f19bd7";ctx.fillRect(-8,-72,16,42);ctx.beginPath();ctx.moveTo(-5,-74);ctx.lineTo(0,-102);ctx.lineTo(8,-74);ctx.fillStyle="#ffd85a";ctx.fill();ctx.fillStyle="#b56bd6";ctx.beginPath();ctx.arc(20,-50,18,0,7);ctx.fill();ctx.restore()}
+function drawSquirrel(){ctx.save();ctx.translate(squirrel.x,squirrel.y);ctx.rotate(squirrel.rot);ctx.fillStyle="#a85d2d";ctx.beginPath();ctx.ellipse(0,4,25,18,0,0,7);ctx.fill();ctx.fillStyle="#7b421f";ctx.beginPath();ctx.ellipse(-25,-8,16,28,-.5,0,7);ctx.fill();ctx.fillStyle="#a85d2d";ctx.beginPath();ctx.arc(22,-10,17,0,7);ctx.fill();ctx.beginPath();ctx.arc(15,-23,7,0,7);ctx.arc(28,-23,7,0,7);ctx.fill();ctx.fillStyle="#fff";ctx.beginPath();ctx.arc(28,-13,5,0,7);ctx.fill();ctx.fillStyle="#222";ctx.beginPath();ctx.arc(30,-13,2,0,7);ctx.fill();ctx.fillStyle="#f5d2b4";ctx.beginPath();ctx.moveTo(0,0);ctx.quadraticCurveTo(-15,-10,-5,14);ctx.quadraticCurveTo(12,5,0,0);ctx.fill();ctx.restore()}
+function draw(){drawBackground();for(const o of obstacles)drawObstacle(o);ctx.fillStyle="#4d7f36";ctx.fillRect(0,ground,W,H-ground);drawSquirrel()}
+function loop(t){if(!playing)return;const dt=Math.min(.032,(t-last)/1000);last=t;update(dt);draw();if(playing)requestAnimationFrame(loop)}
+start.addEventListener("click",()=>{if(!playing)begin()});
+canvas.addEventListener("pointerdown",e=>{e.preventDefault();if(playing)flap()});
+window.addEventListener("keydown",e=>{if(e.code==="Space"||e.code==="ArrowUp"){e.preventDefault();if(!playing)begin();else flap()}});
+resetLevel();draw();
+</script>
+</body>
+</html>
