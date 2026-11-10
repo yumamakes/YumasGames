@@ -42,7 +42,7 @@ header p { margin: 0; font-size: 1.05rem; opacity: .75; }
 }
 .game.snake { --edge: var(--hedge); }
 .game.breakout { --edge: var(--frame); }
-.game.battle { --edge: #b9801a; }
+ .game.battle { --edge: #b9801a; }\n.game.squirrel { --edge: #e77824; }
 .game:hover { transform: translateY(-2px); box-shadow: 0 7px 0 var(--edge); }
 .game:active { transform: translateY(5px); box-shadow: 0 0 0 var(--edge); }
 .game:focus-visible { outline: 3px solid var(--sun); outline-offset: 3px; }
@@ -79,6 +79,12 @@ header p { margin: 0; font-size: 1.05rem; opacity: .75; }
       <img src="images/battle.jpg" width="832" height="520" alt="Battle Balls: Fire Ball and Poop Ball fighting in the arena while a fireball flies">
       <h2>Battle Balls</h2>
       <p>Pick two of 12 powered-up balls, aim their arrows and watch them battle it out. Best of 3.</p>
+      <span class="go">Play ▶</span>
+    </a>
+    <a class="game squirrel" href="flappy-squirrel.html">
+      <div style="width:100%;aspect-ratio:16/10;border-radius:12px;background:linear-gradient(#bdeeff,#dff7c7);display:grid;place-items:center;font-size:clamp(4rem,12vw,7rem)" aria-hidden="true">🐿️</div>
+      <h2>Flappy Squirrel</h2>
+      <p>Help a flying squirrel flap through trees, buildings, giraffes and unicorns across 3 levels.</p>
       <span class="go">Play ▶</span>
     </a>
   </div>
