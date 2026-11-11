@@ -81,7 +81,7 @@ let lv=0,score=0,total=0,playing=false,dead=false,obstacles=[],last=0,spawn=0;
 const squirrel={x:220,y:260,vy:0,r:22,rot:0};
 function resetLevel(){squirrel.y=260;squirrel.vy=0;obstacles=[];spawn=0;score=0;levelEl.textContent="Level "+(lv+1)+" — "+levels[lv].name;scoreEl.textContent="0 / "+levels[lv].need}
 function begin(){HighScores.hide();total=0;start.parentNode.hidden=false;overlay.classList.remove("banner");lv=0;playing=true;dead=false;overlay.hidden=true;resetLevel();last=performance.now();requestAnimationFrame(loop)}
-function flap(){if(!playing){return} if(dead){return} squirrel.vy=-7.4}
+function flap(){if(!playing){return} if(dead){return} squirrel.vy=-5.2} // each flap rises ~half as high as the old -7.4
 function addObstacle(){
  const L=levels[lv], gap=L.gap, prev=obstacles[obstacles.length-1], lo=75, hi=ground-50-gap;
  let top=lo+Math.random()*(hi-lo);
