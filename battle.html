@@ -8,7 +8,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap">
 <style>
-/* Layout: one column — header, then either the ball picker (two ship slots, 3×2 ball grid, wins chart) or the arena */
+/* Layout: one column — header, then the start screen, a player's spin-and-pick turn, or the arena */
 :root {
   --sky: #fdf3d8;
   --ink: #2f3a1f;
@@ -49,22 +49,23 @@ button:active { transform: translateY(3px); box-shadow: 0 0 0 var(--frame); }
 button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
 button:disabled { opacity: .45; cursor: default; transform: none; box-shadow: 0 3px 0 var(--frame); }
 
-/* picker */
-.slots { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; align-items: center; }
-.slot { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 6px; min-width: 0; border-color: var(--team); box-shadow: 0 3px 0 var(--team); }
-.slot.blue { --team: var(--blue); }
-.slot.red { --team: var(--red); }
-.slot small { font-size: .7rem; text-transform: uppercase; letter-spacing: .1em; color: var(--team); }
-.slot canvas { width: 56px; height: 56px; }
-.slot b { font-size: .9rem; min-height: 1.2em; }
-.vs { font-weight: 700; font-size: 1.4rem; }
-.pick-hint { text-align: center; margin: 0; font-weight: 600; }
-.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-.card { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 4px 10px; min-width: 0; }
-.card canvas { width: 64px; height: 64px; }
-.card b { font-size: .9rem; line-height: 1.15; text-align: center; }
-.card span { font-size: .72rem; line-height: 1.2; opacity: .75; text-align: center; }
-.card.picked { background: #fff1c9; }
+/* start screen */
+.lead { margin: 0; text-align: center; font-weight: 500; line-height: 1.4; }
+/* turn screen: spin for 3 balls, pick 1 */
+.turn { background: var(--btn); border: 3px solid var(--team); border-radius: 18px; box-shadow: 0 5px 0 var(--team);
+  padding: 14px 12px 16px; display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; }
+.turn.blue { --team: var(--blue); }
+.turn.red { --team: var(--red); }
+.turn small { font-size: .8rem; text-transform: uppercase; letter-spacing: .1em; opacity: .7; }
+.turn h2 { margin: 0; font-size: 1.7rem; color: var(--team); }
+.turn p { margin: 0; font-weight: 500; min-height: 1.3em; }
+.reels { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; }
+.reel { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 4px 10px; min-width: 0; border-color: var(--team); box-shadow: 0 3px 0 var(--team); }
+.reel canvas { width: 84px; height: 100px; border-radius: 10px; background: #151832; }
+.reel b { font-size: .92rem; line-height: 1.15; min-height: 1.15em; }
+.reel span { font-size: .72rem; line-height: 1.2; opacity: .75; min-height: 2.4em; }
+.reel:disabled { opacity: 1; }
+.reel.chosen { background: #fff1c9; outline: 3px solid var(--gold); }
 .go { font-size: 1.3rem; padding: 12px; background: var(--gold); border-color: var(--gold-dark); box-shadow: 0 4px 0 var(--gold-dark); }
 .wins { background: var(--btn); border: 2px solid var(--frame); border-radius: 14px; padding: 10px 14px; display: flex; flex-direction: column; gap: 6px; }
 .wins h2 { margin: 0; font-size: 1.1rem; }
@@ -109,22 +110,27 @@ canvas#c { display: block; width: 100%; height: auto; touch-action: none; }
 <div class="wrap">
   <header class="titles"><a class="back" href="index.html">‹ Menu</a><h1>Battle Balls</h1></header>
 
-  <section id="selectView" aria-label="Pick two balls">
+  <section id="selectView" aria-label="Start">
     <div class="wrap" style="padding:0">
-      <div class="slots">
-        <button class="slot blue" id="slot0" aria-label="Blue ship ball"><small>Blue ship</small><canvas width="112" height="112"></canvas><b>Pick a ball</b></button>
-        <span class="vs">VS</span>
-        <button class="slot red" id="slot1" aria-label="Red ship ball"><small>Red ship</small><canvas width="112" height="112"></canvas><b>Pick a ball</b></button>
-      </div>
-      <p class="pick-hint" id="pickHint">Pick a ball for the blue ship</p>
-      <div class="grid" id="grid"></div>
-      <button class="go" id="goBtn" disabled>Battle!</button>
+      <p class="lead">Pass and play for 2 players. Every round, each player spins for 3 balls and picks 1. First to win 2 rounds takes the match!</p>
+      <button class="go" id="goBtn">Start match</button>
       <section class="wins" aria-labelledby="winsTitle">
         <h2 id="winsTitle">Wins by ball</h2>
         <div id="winBars"></div>
         <p class="note" id="winsNote">Loading…</p>
       </section>
     </div>
+  </section>
+
+  <section id="turnView" hidden aria-label="Pick your ball">
+    <div class="turn blue" id="turnCard">
+      <small id="turnRound">Round 1</small>
+      <h2 id="turnTitle">Blue player's turn</h2>
+      <p id="turnHint">Hand the device to Blue, then spin!</p>
+      <div class="reels" id="reels"></div>
+      <button class="go" id="spinBtn">🎰 Spin!</button>
+    </div>
+    <div class="arena-actions" style="margin-top:12px"><button id="turnQuit">‹ Quit match</button></div>
   </section>
 
   <section id="arenaView" hidden aria-label="Arena">
@@ -135,8 +141,7 @@ canvas#c { display: block; width: 100%; height: auto; touch-action: none; }
           <h2 id="moTitle">Spike Ball wins!</h2>
           <p id="moText">2 – 1</p>
           <div class="row">
-            <button class="again" id="rematchBtn">Rematch</button>
-            <button id="newBallsBtn">New balls</button>
+            <button class="again" id="rematchBtn">Play again</button>
           </div>
         </div>
       </div>
@@ -145,7 +150,7 @@ canvas#c { display: block; width: 100%; height: auto; touch-action: none; }
         <button class="go-fight" id="fightBtn">GO!</button>
         <div class="aim-pair red"><button data-team="1" data-dir="-1" aria-label="Turn the red arrow left">⟲</button><button data-team="1" data-dir="1" aria-label="Turn the red arrow right">⟳</button></div>
       </div>
-      <div class="arena-actions"><button id="quitBtn">‹ New balls</button></div>
+      <div class="arena-actions"><button id="quitBtn">‹ Quit match</button></div>
     </div>
   </section>
 </div>
@@ -171,10 +176,10 @@ const ORDER = ['spike', 'shock', 'fire', 'ice', 'rubber', 'poop', 'bomb', 'ghost
 const TEAM = [{color: '#2f7de1', light: '#7fb6ff'}, {color: '#e0402f', light: '#ff8a7a'}];
 
 // damage and timing
-const HP = 75, R = 30, OVERTIME = 20;
-// balanced with ~10,000 simulated rounds: every ball wins roughly 45–60% of its fights
+const HP = 75, R = 30, OVERTIME = 40;   // overtime (everyone slowly loses energy) starts after 40 sec
+// balanced with simulated rounds: every ball wins roughly 42–58% of its fights
 const DMG = {spike: 26, shock: 10, shockDrain: 3.2, rubber: 11, poop: 12, fire: 16, freezeBase: 3, freezeRamp: 5.5,
-  bomb: 55, ghost: 12, laser: 58, star: 26, slime: 14, bubble: 8, shieldBack: 18, laserEvery: 1.3, bombRadius: 90};
+  bomb: 40, ghost: 12, laser: 58, star: 26, slime: 14, bubble: 8, shieldBack: 18, laserEvery: 1.3, bombRadius: 80};
 const STUN_S = 2, FREEZE_S = 2, IMMUNE_S = 3.5, FIRE_EVERY = 2, BOMB_FUSE = 1.5;
 const GROSS = ['Gross!', "I'm gonna puke!"];
 
@@ -584,7 +589,7 @@ function stepWorld(dt) {
       if (b.type === 'fire' && (b.fireCd -= dt) <= 0) { b.fireCd = FIRE_EVERY; shoot(b, 'fire', rand(0, TAU), 280); }
       if (b.type === 'ninja' && (b.ninjaCd -= dt) <= 0) { b.ninjaCd = 2; for (const s of [-.3, 0, .3]) shoot(b, 'star', b.ang + s, 300); }
       if (b.type === 'laser' && (b.laserCd -= dt) <= 0) { b.laserCd = DMG.laserEvery; fireLaser(b); }
-      if (b.type === 'bomb' && (b.bombCd -= dt) <= 0) { b.bombCd = 3; w.bombs.push({x: b.x, y: b.y, t: w.time, owner: b.team}); }
+      if (b.type === 'bomb' && (b.bombCd -= dt) <= 0) { b.bombCd = 2.2; w.bombs.push({x: b.x, y: b.y, t: w.time, owner: b.team}); }
       if (b.type === 'slime' && (b.slimeCd -= dt) <= 0) { b.slimeCd = .7; w.puddles.push({x: b.x, y: b.y, t: w.time, owner: b.team, seed: Math.random() * 1e6 | 0}); }
     }
     if (w.overtime) hurt(b, 5 * dt, false);
@@ -674,11 +679,12 @@ function tick(dt) {
       w.winner.vx = w.winner.vy = 0; w.winner.stun = w.winner.freeze = 0;
       addText(W / 2, 190, `${TYPES[w.winner.type].name}`, TEAM[w.winner.team].light, 26);
       addText(W / 2, 222, 'wins the round!', '#ffffff', 22);
+      recordWin(w.winner.type);
     }
     w.loser.dying.t += dt;
     if (w.overT > 2.8) {
       if (Math.max(...match.wins) >= 2) endMatch();
-      else { match.round++; startRound(); }
+      else { match.round++; showTurn(0); }
     }
   }
   w.shards.forEach(s => { s.life += dt; s.x += s.vx * dt; s.y += s.vy * dt; s.vx *= .97; s.vy *= .97; });
@@ -694,12 +700,11 @@ const shipX = (team, t) => team ? 290 - (t - .8) * 230 : 110 + (t - .8) * 230;
 function endMatch() {
   if (world.phase === 'done') return;
   world.phase = 'done';
-  const winTeam = match.wins[0] >= 2 ? 0 : 1, type = match.types[winTeam];
-  document.getElementById('moTitle').textContent = `${TYPES[type].name} wins!`;
-  document.getElementById('moText').textContent = `${match.wins[winTeam]} – ${match.wins[1 - winTeam]}  ·  ${winTeam ? 'Red' : 'Blue'} ship takes the match`;
+  const winTeam = match.wins[0] >= 2 ? 0 : 1;
+  document.getElementById('moTitle').textContent = `${winTeam ? 'Red' : 'Blue'} player wins!`;
+  document.getElementById('moText').textContent = `${match.wins[winTeam]} – ${match.wins[1 - winTeam]}`;
   document.getElementById('matchOver').hidden = false;
   overAt = performance.now();
-  recordWin(type);
 }
 
 // ================= drawing the arena =================
@@ -934,57 +939,88 @@ function drawHud() {
 function frame(t) {
   const dt = Math.min(1 / 30, (t - lastFrame) / 1000); lastFrame = t;
   if (!arenaView.hidden && world) { if (world.phase !== 'done') tick(dt); else world.time += dt; draw(); }
-  if (!selectView.hidden) drawPickerBalls(t / 1000);
+  if (!turnView.hidden) drawReels(t / 1000);
   requestAnimationFrame(frame);
 }
 
-// ================= ball picker =================
-const selectView = document.getElementById('selectView'), arenaView = document.getElementById('arenaView');
-const grid = document.getElementById('grid'), goBtn = document.getElementById('goBtn'), pickHint = document.getElementById('pickHint');
-const slots = [document.getElementById('slot0'), document.getElementById('slot1')];
-const picks = [null, null];
-const cards = {};
+// ================= start screen and spin turns =================
+const selectView = document.getElementById('selectView'), arenaView = document.getElementById('arenaView'), turnView = document.getElementById('turnView');
+const reelsEl = document.getElementById('reels'), spinBtn = document.getElementById('spinBtn'), turnHint = document.getElementById('turnHint');
+const NAMES = ['Blue', 'Red'];
+function sizeCanvas(cv, css, cssH = css) { cv.width = css * dpr; cv.height = cssH * dpr; const c = cv.getContext('2d'); c.scale(dpr, dpr); return c; }
 
-function sizeCanvas(cv, css) { cv.width = css * dpr; cv.height = css * dpr; const c = cv.getContext('2d'); c.scale(dpr, dpr); return c; }
-ORDER.forEach(id => {
-  const b = document.createElement('button');
-  b.className = 'card'; b.innerHTML = `<canvas></canvas><b>${TYPES[id].name}</b><span>${TYPES[id].power}</span>`;
-  b.addEventListener('click', () => pick(id));
-  grid.appendChild(b);
-  cards[id] = {el: b, ctx: sizeCanvas(b.querySelector('canvas'), 64)};
+// three reels; each spins through random balls and stops on its own ball, left to right
+const reels = [0, 1, 2].map(i => {
+  const el = document.createElement('button');
+  el.className = 'reel'; el.disabled = true;
+  el.innerHTML = '<canvas></canvas><b></b><span></span>';
+  el.addEventListener('click', () => choose(i));
+  reelsEl.appendChild(el);
+  return {el, ctx: sizeCanvas(el.querySelector('canvas'), 84, 100), seq: [], start: 0, dur: 0, done: false};
 });
-const slotCtx = slots.map(s => sizeCanvas(s.querySelector('canvas'), 56));
-slots.forEach((s, i) => s.addEventListener('click', () => { picks[i] = null; renderPicks(); }));
+let turn = null;   // {team, spun, chosen}
 
-function pick(id) {
-  const i = picks[0] === null ? 0 : picks[1] === null ? 1 : 1;
-  picks[i] = id; renderPicks();
+function showTurn(team) {
+  turn = {team, spun: false, chosen: false};
+  selectView.hidden = arenaView.hidden = true; turnView.hidden = false;
+  document.getElementById('turnCard').className = 'turn ' + (team ? 'red' : 'blue');
+  document.getElementById('turnRound').textContent = `Round ${match.round} · Blue ${match.wins[0]} – ${match.wins[1]} Red`;
+  document.getElementById('turnTitle').textContent = `${NAMES[team]} player's turn`;
+  turnHint.textContent = `Hand the device to ${NAMES[team]}, then spin!`;
+  reels.forEach(r => { r.seq = []; r.done = false; r.el.disabled = true; r.el.classList.remove('chosen'); r.el.querySelector('b').textContent = '?'; r.el.querySelector('span').textContent = ''; });
+  spinBtn.hidden = false; spinBtn.focus();
 }
-function renderPicks() {
-  slots.forEach((s, i) => { s.querySelector('b').textContent = picks[i] ? TYPES[picks[i]].short : 'Pick a ball'; });
-  ORDER.forEach(id => cards[id].el.classList.toggle('picked', picks.includes(id)));
-  goBtn.disabled = !(picks[0] && picks[1]);
-  pickHint.textContent = !picks[0] ? 'Pick a ball for the blue ship' : !picks[1] ? 'Now pick a ball for the red ship' : 'Ready! Tap a ship to change its ball.';
+
+function spin() {
+  if (!turn || turn.spun) return;
+  turn.spun = true; spinBtn.hidden = true; turnHint.textContent = 'Spinning…';
+  const hand = [...ORDER].sort(() => Math.random() - .5).slice(0, 3);   // 3 different balls
+  const now = performance.now() / 1000;
+  reels.forEach((r, i) => {
+    r.seq = Array.from({length: 16 + i * 5}, () => ORDER[Math.random() * ORDER.length | 0]);
+    r.seq.push(hand[i]); r.start = now; r.dur = 1.3 + i * .5; r.done = false;
+  });
 }
-function drawPickerBalls(t) {
-  ORDER.forEach(id => { const c = cards[id].ctx; c.clearRect(0, 0, 64, 64); drawBall(c, id, 32, 34, 19, {g: 1, ang: -.5, t, lx: 0, ly: .3}); });
-  slotCtx.forEach((c, i) => {
-    c.clearRect(0, 0, 56, 56);
-    if (picks[i]) drawBall(c, picks[i], 28, 30, 17, {g: 1, ang: i ? Math.PI + .4 : -.4, t, lx: i ? -1 : 1, ly: 0});
-    else { c.strokeStyle = TEAM[i].color; c.setLineDash([4, 4]); c.lineWidth = 2; c.beginPath(); c.arc(28, 30, 17, 0, TAU); c.stroke(); c.setLineDash([]); }
+
+function choose(i) {
+  if (!turn || turn.chosen || !reels.every(r => r.done)) return;
+  turn.chosen = true;
+  reels[i].el.classList.add('chosen');
+  match.types[turn.team] = reels[i].seq[reels[i].seq.length - 1];
+  turnHint.textContent = `${TYPES[match.types[turn.team]].name}!`;
+  const t = turn;
+  setTimeout(() => { if (turn !== t) return; if (t.team === 0) showTurn(1); else startRoundView(); }, 700);
+}
+
+function drawReels(t) {
+  reels.forEach(r => {
+    const c = r.ctx; c.clearRect(0, 0, 84, 100);
+    if (!r.seq.length) { c.fillStyle = 'rgba(255,255,255,.5)'; c.font = '700 40px Fredoka, sans-serif'; c.textAlign = 'center'; c.fillText('?', 42, 64); return; }
+    const k = Math.min(1, (t - r.start) / r.dur), last = r.seq.length - 1;
+    const pos = last * (1 - Math.pow(1 - k, 3));   // fast, then slowing down
+    if (k >= 1 && !r.done) {
+      r.done = true; const id = r.seq[last];
+      r.el.querySelector('b').textContent = TYPES[id].name; r.el.querySelector('span').textContent = TYPES[id].power;
+      if (reels.every(q => q.done)) { reels.forEach(q => { q.el.disabled = false; }); turnHint.textContent = 'Pick one ball!'; }
+    }
+    for (let j = Math.floor(pos) - 1; j <= Math.floor(pos) + 2; j++) {
+      if (j < 0 || j > last) continue;
+      drawBall(c, r.seq[j], 42, 50 + (j - pos) * 66, 24, {g: 1, ang: -.5, t, lx: 0, ly: .3});
+    }
   });
 }
 
 function startMatch() {
-  match = {types: [picks[0], picks[1]], wins: [0, 0], round: 1};
+  match = {types: [null, null], wins: [0, 0], round: 1};
   document.getElementById('matchOver').hidden = true;
-  selectView.hidden = true; arenaView.hidden = false;
-  startRound();
+  showTurn(0);
 }
-function showPicker() { arenaView.hidden = true; selectView.hidden = false; world = null; loadWins(); }
-goBtn.addEventListener('click', startMatch);
-document.getElementById('quitBtn').addEventListener('click', showPicker);
-document.getElementById('newBallsBtn').addEventListener('click', () => { if (performance.now() - overAt > 500) showPicker(); });
+function startRoundView() { turnView.hidden = true; arenaView.hidden = false; startRound(); }
+function showStart() { arenaView.hidden = turnView.hidden = true; selectView.hidden = false; world = null; turn = null; loadWins(); }
+document.getElementById('goBtn').addEventListener('click', startMatch);
+spinBtn.addEventListener('click', spin);
+document.getElementById('quitBtn').addEventListener('click', showStart);
+document.getElementById('turnQuit').addEventListener('click', showStart);
 document.getElementById('rematchBtn').addEventListener('click', () => { if (performance.now() - overAt > 500) startMatch(); });
 
 // ================= aiming =================
@@ -1026,7 +1062,7 @@ function renderWins(counts, online) {
     <div class="bar-row"><span>${TYPES[id].short}</span>
       <div class="bar-track"><div class="bar" style="width:${(counts[id] || 0) / max * 100}%;background:${TYPES[id].color}"></div></div>
       <b>${counts[id] || 0}</b></div>`).join('');
-  document.getElementById('winsNote').textContent = online ? 'Match wins from everyone who plays.' : 'Match wins on this device.';
+  document.getElementById('winsNote').textContent = online ? 'Round wins from everyone who plays.' : 'Round wins on this device.';
 }
 
 async function loadWins() {
@@ -1053,7 +1089,7 @@ function recordWin(type) {
   }).catch(() => {});
 }
 
-renderPicks(); loadWins();
+loadWins();
 requestAnimationFrame(frame);
 </script>
 
