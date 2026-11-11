@@ -16,10 +16,12 @@ h1{margin:0 0 4px;font-size:clamp(2rem,7vw,3.4rem)}h1 span{color:#e77824}
 canvas{display:block;width:100%;height:auto;aspect-ratio:16/9;touch-action:none}
 .hud{position:absolute;inset:12px 14px auto;display:flex;justify-content:space-between;align-items:center;pointer-events:none;font-weight:700;font-size:1.05rem;text-shadow:0 2px #fff}
 .badge{background:#fff8dfdd;border:2px solid #536b42;border-radius:12px;padding:5px 10px}
+[hidden]{display:none!important}
+.overlay.banner{pointer-events:none}
 .overlay{position:absolute;inset:0;display:grid;place-items:center;background:#25442d66;padding:18px}
 .panel{max-width:520px;background:#fff8df;border:4px solid #536b42;border-radius:22px;padding:22px;box-shadow:0 7px 0 #536b42}
 .panel h2{margin:0 0 8px;font-size:clamp(1.8rem,6vw,2.8rem)}.panel p{margin:7px 0 15px;line-height:1.4}
-button{border:0;border-radius:14px;background:#e77824;color:white;font:700 1.1rem inherit;padding:11px 22px;cursor:pointer;box-shadow:0 4px 0 #a94e12}
+button{border:0;border-radius:14px;background:#e77824;color:white;font:700 1.2rem "Fredoka","Trebuchet MS",sans-serif;padding:11px 22px;cursor:pointer;box-shadow:0 4px 0 #a94e12}
 button:active{transform:translateY(3px);box-shadow:0 1px 0 #a94e12}
 .back{display:inline-block;margin-top:18px;color:var(--ink);font-weight:700;text-decoration:none}
 @media(prefers-reduced-motion:reduce){canvas{animation:none}}
@@ -50,22 +52,26 @@ const levels=[
 let lv=0,score=0,playing=false,dead=false,obstacles=[],last=0,spawn=0;
 const squirrel={x:220,y:260,vy:0,r:22,rot:0};
 function resetLevel(){squirrel.y=260;squirrel.vy=0;obstacles=[];spawn=0;score=0;levelEl.textContent="Level "+(lv+1)+" — "+levels[lv].name;scoreEl.textContent="0 / "+levels[lv].need}
-function begin(){lv=0;playing=true;dead=false;overlay.hidden=true;resetLevel();last=performance.now();requestAnimationFrame(loop)}
+function begin(){start.hidden=false;overlay.classList.remove("banner");lv=0;playing=true;dead=false;overlay.hidden=true;resetLevel();last=performance.now();requestAnimationFrame(loop)}
 function flap(){if(!playing){return} if(dead){return} squirrel.vy=-7.4}
 function addObstacle(){
- const L=levels[lv], gap=L.gap, top=75+Math.random()*(ground-125-gap), kind=L.type;
+ const L=levels[lv], gap=L.gap, prev=obstacles[obstacles.length-1], lo=75, hi=ground-50-gap;
+ let top=lo+Math.random()*(hi-lo);
+ if(prev)top=Math.max(prev.top-130,Math.min(prev.top+130,top)); // keep the next gap reachable
+ let kind=L.type;
  if(kind==="mix"){kind=["tree","building","giraffe","unicorn"][Math.floor(Math.random()*4)]}
- obstacles.push({x:W+40,w:76,top,bottom:top+gap,kind,passed:false})
+ const w=(kind==="giraffe"||kind==="unicorn")?56:76;
+ obstacles.push({x:W+40,w,top,bottom:top+gap,kind,passed:false})
 }
 function hit(o){return squirrel.x+squirrel.r*.75>o.x&&squirrel.x-squirrel.r*.75<o.x+o.w&&(squirrel.y-squirrel.r*.8<o.top||squirrel.y+squirrel.r*.8>o.bottom)}
 function nextLevel(){
  if(lv<levels.length-1){lv++;resetLevel();flash("Level "+(lv+1)+"!");}
- else{playing=false;overlay.hidden=false;title.textContent="You did it! 🐿️🏆";message.textContent="All 3 levels cleared! The flying squirrel wins.";start.textContent="Play Again";draw()}
+ else{playing=false;start.hidden=false;overlay.classList.remove("banner");overlay.hidden=false;title.textContent="You did it! 🐿️🏆";message.textContent="All 3 levels cleared! The flying squirrel wins.";start.textContent="Play Again";draw()}
 }
-function gameOver(){dead=true;playing=false;overlay.hidden=false;title.textContent="Splat!";message.textContent="The squirrel hit an obstacle. Score: "+score+" / "+levels[lv].need;start.textContent="Try Again";draw()}
-function flash(t){title.textContent=t;message.textContent="Keep flapping!";overlay.hidden=false;setTimeout(()=>{if(playing)overlay.hidden=true},650)}
+function gameOver(){start.hidden=false;overlay.classList.remove("banner");dead=true;playing=false;overlay.hidden=false;title.textContent="Splat!";message.textContent="The squirrel hit an obstacle. Score: "+score+" / "+levels[lv].need;start.textContent="Try Again";draw()}
+function flash(t){title.textContent=t;message.textContent="Keep flapping!";start.hidden=true;overlay.classList.add("banner");overlay.hidden=false;setTimeout(()=>{if(playing)overlay.hidden=true},650)}
 function update(dt){
- const L=levels[lv];squirrel.vy+=18*dt;squirrel.y+=squirrel.vy;squirrel.rot=Math.max(-.45,Math.min(1.1,squirrel.vy/10));
+ const L=levels[lv];squirrel.vy+=18*dt;squirrel.y+=squirrel.vy*60*dt;squirrel.rot=Math.max(-.45,Math.min(1.1,squirrel.vy/10));
  spawn-=dt;if(spawn<=0){addObstacle();spawn=.95+Math.random()*.45}
  for(const o of obstacles){o.x-=L.speed*60*dt;if(!o.passed&&o.x+o.w<squirrel.x){o.passed=true;score++;scoreEl.textContent=score+" / "+L.need;if(score>=L.need){nextLevel();return}}if(hit(o)){gameOver();return}}
  obstacles=obstacles.filter(o=>o.x>-120);
@@ -83,11 +89,12 @@ function drawObstacle(o){
  const x=o.x,w=o.w;
  if(o.kind==="tree"){ctx.fillStyle="#79502a";ctx.fillRect(x+25,0,26,o.top);ctx.fillStyle="#3f8b42";for(let y=28;y<o.top;y+=48){ctx.beginPath();ctx.arc(x+38,y,34,0,7);ctx.fill()}ctx.fillStyle="#79502a";ctx.fillRect(x+25,o.bottom,26,ground-o.bottom);ctx.fillStyle="#3f8b42";for(let y=o.bottom+25;y<ground;y+=48){ctx.beginPath();ctx.arc(x+38,y,34,0,7);ctx.fill()}}
  if(o.kind==="building"){ctx.fillStyle="#69778a";ctx.fillRect(x,0,w,o.top);ctx.fillRect(x,o.bottom,w,ground-o.bottom);ctx.fillStyle="#ffe36e";for(let yy=22;yy<o.top-10;yy+=35)for(let xx=x+12;xx<x+w-10;xx+=25)ctx.fillRect(xx,yy,12,16);for(let yy=o.bottom+20;yy<ground-10;yy+=35)for(let xx=x+12;xx<x+w-10;xx+=25)ctx.fillRect(xx,yy,12,16)}
- if(o.kind==="giraffe"){drawGiraffe(x+38,o.top-18,true);drawGiraffe(x+38,o.bottom+18,false)}
- if(o.kind==="unicorn"){drawUnicorn(x+38,o.top-8,true);drawUnicorn(x+38,o.bottom+8,false)}
+ if(o.kind==="giraffe"){drawGiraffe(x+w/2,o.top,o.top,-1);drawGiraffe(x+w/2,o.bottom,ground-o.bottom,1)}
+ if(o.kind==="unicorn"){drawUnicorn(x+w/2,o.top,o.top,-1);drawUnicorn(x+w/2,o.bottom,ground-o.bottom,1)}
 }
-function drawGiraffe(x,y,up){ctx.save();ctx.translate(x,y);if(up)ctx.scale(1,-1);ctx.fillStyle="#e6b64d";ctx.fillRect(-10,-58,20,58);ctx.fillRect(-24,-72,34,20);ctx.fillStyle="#8d632c";for(let i=0;i<5;i++){ctx.beginPath();ctx.arc(-12+(i%2)*18,-18-i*9,5,0,7);ctx.fill()}ctx.fillStyle="#e6b64d";ctx.fillRect(-16,-82,7,14);ctx.fillRect(10,-82,7,14);ctx.restore()}
-function drawUnicorn(x,y,up){ctx.save();ctx.translate(x,y);if(up)ctx.scale(1,-1);ctx.fillStyle="#fff";ctx.beginPath();ctx.ellipse(0,-32,30,20,0,0,7);ctx.fill();ctx.fillStyle="#f19bd7";ctx.fillRect(-8,-72,16,42);ctx.beginPath();ctx.moveTo(-5,-74);ctx.lineTo(0,-102);ctx.lineTo(8,-74);ctx.fillStyle="#ffd85a";ctx.fill();ctx.fillStyle="#b56bd6";ctx.beginPath();ctx.arc(20,-50,18,0,7);ctx.fill();ctx.restore()}
+// Animals: drawn from the gap edge (y=0) out to the ceiling/ground (y=len); dir=-1 flips for the top one
+function drawGiraffe(x,edge,len,dir){ctx.save();ctx.translate(x,edge);ctx.scale(1,dir);ctx.fillStyle="#e6b64d";ctx.fillRect(-14,0,28,len);ctx.beginPath();ctx.ellipse(0,len,28,20,0,0,7);ctx.fill();ctx.fillStyle="#8d632c";for(let y=34;y<len-8;y+=24){ctx.beginPath();ctx.arc((y/24|0)%2?-5:5,y,5,0,7);ctx.fill()}ctx.fillStyle="#e6b64d";ctx.beginPath();ctx.ellipse(-6,13,22,13,0,0,7);ctx.fill();ctx.fillStyle="#c98f35";ctx.beginPath();ctx.ellipse(-22,10,7,6,0,0,7);ctx.fill();ctx.fillStyle="#8d632c";ctx.fillRect(4,22,5,10);ctx.fillRect(13,22,5,10);ctx.fillStyle="#222";ctx.beginPath();ctx.arc(-8,9,2.5,0,7);ctx.fill();ctx.restore()}
+function drawUnicorn(x,edge,len,dir){ctx.save();ctx.translate(x,edge);ctx.scale(1,dir);const c=["#f19bd7","#ffd85a","#9be08a","#8ccfff","#c9a0ff"];for(let y=0,i=0;y<len;y+=18,i++){ctx.fillStyle=c[i%5];ctx.fillRect(-18,y,36,18)}ctx.fillStyle="#fff";ctx.beginPath();ctx.ellipse(4,14,22,14,0,0,7);ctx.fill();ctx.fillStyle="#b56bd6";ctx.beginPath();ctx.ellipse(18,22,8,14,0,0,7);ctx.fill();ctx.fillStyle="#ffd85a";ctx.beginPath();ctx.moveTo(-10,6);ctx.lineTo(-28,2);ctx.lineTo(-10,13);ctx.fill();ctx.fillStyle="#222";ctx.beginPath();ctx.arc(-4,12,2.5,0,7);ctx.fill();ctx.restore()}
 function drawSquirrel(){ctx.save();ctx.translate(squirrel.x,squirrel.y);ctx.rotate(squirrel.rot);ctx.fillStyle="#a85d2d";ctx.beginPath();ctx.ellipse(0,4,25,18,0,0,7);ctx.fill();ctx.fillStyle="#7b421f";ctx.beginPath();ctx.ellipse(-25,-8,16,28,-.5,0,7);ctx.fill();ctx.fillStyle="#a85d2d";ctx.beginPath();ctx.arc(22,-10,17,0,7);ctx.fill();ctx.beginPath();ctx.arc(15,-23,7,0,7);ctx.arc(28,-23,7,0,7);ctx.fill();ctx.fillStyle="#fff";ctx.beginPath();ctx.arc(28,-13,5,0,7);ctx.fill();ctx.fillStyle="#222";ctx.beginPath();ctx.arc(30,-13,2,0,7);ctx.fill();ctx.fillStyle="#f5d2b4";ctx.beginPath();ctx.moveTo(0,0);ctx.quadraticCurveTo(-15,-10,-5,14);ctx.quadraticCurveTo(12,5,0,0);ctx.fill();ctx.restore()}
 function draw(){drawBackground();for(const o of obstacles)drawObstacle(o);ctx.fillStyle="#4d7f36";ctx.fillRect(0,ground,W,H-ground);drawSquirrel()}
 function loop(t){if(!playing)return;const dt=Math.min(.032,(t-last)/1000);last=t;update(dt);draw();if(playing)requestAnimationFrame(loop)}
